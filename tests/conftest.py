@@ -11,7 +11,6 @@ import pytest
 from custom_components.tesla_connect_pakistan.const import (
     CONF_PASSWORD,
     CONF_PHONE,
-    DOMAIN,
 )
 
 MOCK_PHONE = "03001234567"

@@ -62,9 +62,7 @@ async def async_setup_entry(
         type_id: int = data["type_id"]
 
         if type_id == DEVICE_TYPE_GEYSER:
-            entities.append(
-                TeslaGeyserWaterHeater(coordinator, did, name, type_id)
-            )
+            entities.append(TeslaGeyserWaterHeater(coordinator, did, name, type_id))
 
     async_add_entities(entities)
 

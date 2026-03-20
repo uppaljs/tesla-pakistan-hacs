@@ -34,9 +34,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     return {
         "api_endpoint": BASE_URL,
         "authenticated_user": coordinator.api.user_name or "Unknown",
-        "can_reach_server": system_health.async_check_can_reach_url(
-            hass, BASE_URL
-        ),
+        "can_reach_server": system_health.async_check_can_reach_url(hass, BASE_URL),
         "devices": device_count,
         "token_valid": not coordinator.api.token_expired,
     }

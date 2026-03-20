@@ -53,9 +53,7 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     # User step (initial setup)
     # ------------------------------------------------------------------
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial user configuration step."""
         errors: dict[str, str] = {}
 
@@ -93,9 +91,7 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     # Reauth flow (triggered by ConfigEntryAuthFailed)
     # ------------------------------------------------------------------
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle re-authentication when credentials expire."""
         return await self.async_step_reauth_confirm()
 
@@ -204,9 +200,7 @@ class TeslaConnectOptionsFlow(OptionsFlowWithReload):
     scan interval and entity configuration without a manual restart.
     """
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manage integration options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)

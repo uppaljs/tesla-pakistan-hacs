@@ -42,9 +42,7 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             entry: The config entry, used for lifecycle and reading options.
 
         """
-        scan_interval: int = entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
+        scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
@@ -98,9 +96,7 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     else:
                         details = {}
                 except TeslaConnectApiError as exc:
-                    _LOGGER.warning(
-                        "Failed to fetch details for %s (%s): %s", name, did, exc
-                    )
+                    _LOGGER.warning("Failed to fetch details for %s (%s): %s", name, did, exc)
                     details = {}
 
                 result[did] = {
@@ -113,9 +109,7 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         except TeslaConnectAuthError as exc:
             # Permanent auth failure — halt updates, trigger reauth flow.
-            raise ConfigEntryAuthFailed(
-                f"Authentication failed: {exc}"
-            ) from exc
+            raise ConfigEntryAuthFailed(f"Authentication failed: {exc}") from exc
         except TeslaConnectApiError as exc:
             # Temporary API error — coordinator will retry automatically.
             raise UpdateFailed(f"API error: {exc}") from exc

@@ -2,32 +2,17 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
 
-import pytest
-
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
-from custom_components.tesla_connect_pakistan.api import (
-    TeslaConnectApiError,
-    TeslaConnectAuthError,
-)
 from custom_components.tesla_connect_pakistan.config_flow import (
     STEP_USER_DATA_SCHEMA,
     TeslaConnectConfigFlow,
     TeslaConnectOptionsFlow,
 )
 from custom_components.tesla_connect_pakistan.const import (
-    CONF_ENABLE_SCHEDULE_SWITCHES,
     CONF_PASSWORD,
     CONF_PHONE,
-    CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
-
-from .conftest import MOCK_CONFIG_ENTRY_DATA, MOCK_PASSWORD, MOCK_PHONE, MOCK_USER_NAME
 
 
 class TestUserStepSchema:

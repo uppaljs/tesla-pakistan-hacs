@@ -44,11 +44,7 @@ async def async_setup_entry(
             # Only create the 24 hourly schedule switches when enabled.
             if enable_schedule:
                 for hour in range(24):
-                    entities.append(
-                        GeyserTimerSlotSwitch(
-                            coordinator, did, name, type_id, hour
-                        )
-                    )
+                    entities.append(GeyserTimerSlotSwitch(coordinator, did, name, type_id, hour))
 
     async_add_entities(entities)
 

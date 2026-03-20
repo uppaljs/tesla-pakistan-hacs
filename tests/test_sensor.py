@@ -2,15 +2,6 @@
 
 from __future__ import annotations
 
-from custom_components.tesla_connect_pakistan.sensor import (
-    GeyserElectricUnitsSensor,
-    GeyserGasUnitsSensor,
-    GeyserModeSensor,
-    GeyserScheduleSensor,
-    GeyserStatusSensor,
-    GeyserTempSensor,
-    GeyserUserModeSensor,
-)
 
 from .conftest import (
     MOCK_GEYSER_DETAILS,
