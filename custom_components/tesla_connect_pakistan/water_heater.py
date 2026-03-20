@@ -102,9 +102,14 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
 
     @property
     def state(self) -> str | None:
-        """Return the HA state constant based on the geyser's current mode.
+        """Return the HA state constant based on the geyser's *current* mode.
 
-        If vacation mode is active the geyser is effectively off.
+        curr_mode = what the device is actually running on right now.
+        user_mode = what the user selected (e.g. automatic).
+
+        In automatic mode, the device picks gas or electric based on
+        availability, so curr_mode can be GAS even when user_mode is
+        AUTOMATIC.  We report what the geyser is actually doing.
         """
         if self._details.get("vacation"):
             return STATE_OFF

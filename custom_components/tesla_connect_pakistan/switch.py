@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -38,13 +39,17 @@ async def async_setup_entry(
                     GeyserTwoHourSwitch(coordinator, did, name, type_id),
                 ]
             )
-            # One switch per hourly time slot (24 switches)
+            # Hourly schedule switches — config category so they don't
+            # clutter the main device page.
             for hour in range(24):
                 entities.append(
                     GeyserTimerSlotSwitch(coordinator, did, name, type_id, hour)
                 )
 
     async_add_entities(entities)
+
+
+# ── Feature switches ─────────────────────────────────────────────────
 
 
 class GeyserBoostSwitch(TeslaConnectEntity, SwitchEntity):
@@ -134,14 +139,18 @@ class GeyserTwoHourSwitch(TeslaConnectEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
 
+# ── Hourly schedule switches ─────────────────────────────────────────
+
+
 class GeyserTimerSlotSwitch(TeslaConnectEntity, SwitchEntity):
     """Switch for an individual hourly timer slot (0–23).
 
-    Toggling a slot sends the full 24-slot schedule to the API,
-    with only the target slot changed.
+    Toggling a slot sends the full 24-slot schedule to the API
+    with only the target slot changed.  Marked as CONFIG entities
+    so they appear under the device's configuration section.
     """
 
-    _attr_icon = "mdi:clock-outline"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -160,11 +169,17 @@ class GeyserTimerSlotSwitch(TeslaConnectEntity, SwitchEntity):
 
     @property
     def name(self) -> str:
-        return f"Timer {self._hour:02d}:00"
+        end = (self._hour + 1) % 24
+        return f"Schedule {self._hour:02d}:00–{end:02d}:00"
+
+    @property
+    def icon(self) -> str:
+        if self.is_on:
+            return "mdi:clock-check"
+        return "mdi:clock-outline"
 
     @property
     def _current_times(self) -> list[dict]:
-        """Return the current 24-slot schedule from coordinator data."""
         return self._details.get("times", [])
 
     @property
@@ -175,7 +190,6 @@ class GeyserTimerSlotSwitch(TeslaConnectEntity, SwitchEntity):
         return None
 
     def _build_updated_times(self, target_status: bool) -> list[dict]:
-        """Clone the current schedule with one slot changed."""
         times = self._current_times
         updated = []
         for i, slot in enumerate(times):

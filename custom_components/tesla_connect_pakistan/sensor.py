@@ -2,19 +2,35 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfTemperature
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICE_TYPE_GEYSER, DEVICE_TYPE_INVERTER, DOMAIN, GEYSER_MODES
 from .coordinator import TeslaConnectCoordinator
 from .entity import TeslaConnectEntity
+
+# Mode display names — friendly labels for HA UI
+_MODE_LABELS: dict[int, str] = {
+    0: "Gas",
+    1: "Electricity",
+    2: "Automatic",
+    3: "Solar (On)",
+    4: "Solar (Off)",
+}
 
 
 async def async_setup_entry(
@@ -40,6 +56,7 @@ async def async_setup_entry(
                     GeyserUserModeSensor(coordinator, did, name, type_id),
                     GeyserGasUnitsSensor(coordinator, did, name, type_id),
                     GeyserElectricUnitsSensor(coordinator, did, name, type_id),
+                    GeyserScheduleSensor(coordinator, did, name, type_id),
                 ]
             )
         elif type_id == DEVICE_TYPE_INVERTER:
@@ -66,7 +83,6 @@ class GeyserTempSensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "current_temperature"
 
     @property
     def unique_id(self) -> str:
@@ -85,7 +101,6 @@ class GeyserTargetTempSensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "target_temperature"
 
     @property
     def unique_id(self) -> str:
@@ -101,8 +116,6 @@ class GeyserTargetTempSensor(TeslaConnectEntity, SensorEntity):
 
 
 class GeyserStatusSensor(TeslaConnectEntity, SensorEntity):
-    _attr_translation_key = "status_label"
-
     @property
     def unique_id(self) -> str:
         return f"{self._device_id}_status_label"
@@ -121,7 +134,11 @@ class GeyserStatusSensor(TeslaConnectEntity, SensorEntity):
 
 
 class GeyserModeSensor(TeslaConnectEntity, SensorEntity):
-    _attr_translation_key = "current_mode"
+    """The *actual* operating mode the geyser is currently using.
+
+    In automatic mode the device picks gas or electric based on
+    availability, so curr_mode will differ from user_mode.
+    """
 
     @property
     def unique_id(self) -> str:
@@ -134,15 +151,24 @@ class GeyserModeSensor(TeslaConnectEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         mode_val = self._details.get("curr_mode")
-        return GEYSER_MODES.get(mode_val, str(mode_val)) if mode_val is not None else None
+        if mode_val is None:
+            return None
+        return _MODE_LABELS.get(mode_val, str(mode_val))
 
     @property
     def icon(self) -> str:
-        return "mdi:fire"
+        mode_val = self._details.get("curr_mode")
+        if mode_val == 0:
+            return "mdi:fire"
+        if mode_val == 1:
+            return "mdi:lightning-bolt"
+        if mode_val in (3, 4):
+            return "mdi:solar-power"
+        return "mdi:auto-fix"
 
 
 class GeyserUserModeSensor(TeslaConnectEntity, SensorEntity):
-    _attr_translation_key = "user_mode"
+    """The mode the user selected (may differ from curr_mode in auto)."""
 
     @property
     def unique_id(self) -> str:
@@ -155,7 +181,9 @@ class GeyserUserModeSensor(TeslaConnectEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         mode_val = self._details.get("user_mode")
-        return GEYSER_MODES.get(mode_val, str(mode_val)) if mode_val is not None else None
+        if mode_val is None:
+            return None
+        return _MODE_LABELS.get(mode_val, str(mode_val))
 
     @property
     def icon(self) -> str:
@@ -163,8 +191,12 @@ class GeyserUserModeSensor(TeslaConnectEntity, SensorEntity):
 
 
 class GeyserGasUnitsSensor(TeslaConnectEntity, SensorEntity):
+    """Gas consumption in cubic metres (m³)."""
+
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_translation_key = "gas_units"
+    _attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
+    _attr_device_class = SensorDeviceClass.GAS
+    _attr_icon = "mdi:fire-circle"
 
     @property
     def unique_id(self) -> str:
@@ -172,22 +204,24 @@ class GeyserGasUnitsSensor(TeslaConnectEntity, SensorEntity):
 
     @property
     def name(self) -> str:
-        return "Gas units"
+        return "Gas consumption"
 
     @property
     def native_value(self) -> int | None:
         return self._details.get("gas_units")
 
-    @property
-    def icon(self) -> str:
-        return "mdi:fire-circle"
-
 
 class GeyserElectricUnitsSensor(TeslaConnectEntity, SensorEntity):
+    """Electric consumption in kWh.
+
+    The API returns watts; the app divides by 1000 when > 1000 and
+    labels it "kW".  We convert to kWh for HA energy tracking.
+    """
+
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_translation_key = "electric_units"
+    _attr_suggested_display_precision = 1
 
     @property
     def unique_id(self) -> str:
@@ -195,11 +229,69 @@ class GeyserElectricUnitsSensor(TeslaConnectEntity, SensorEntity):
 
     @property
     def name(self) -> str:
-        return "Electric units"
+        return "Electric consumption"
 
     @property
-    def native_value(self) -> int | None:
-        return self._details.get("electric_units")
+    def native_value(self) -> float | None:
+        raw = self._details.get("electric_units")
+        if raw is None:
+            return None
+        # API value is in Wh; convert to kWh
+        return round(raw / 1000, 1)
+
+
+class GeyserScheduleSensor(TeslaConnectEntity, SensorEntity):
+    """Shows the active schedule as a human-readable summary.
+
+    Example: "04:00–23:00 ON" or "04:00–09:00, 16:00–22:00 ON".
+    The full 24-slot schedule is available in extra_state_attributes.
+    """
+
+    _attr_icon = "mdi:calendar-clock"
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._device_id}_schedule"
+
+    @property
+    def name(self) -> str:
+        return "Schedule"
+
+    @property
+    def native_value(self) -> str | None:
+        times = self._details.get("times", [])
+        if not times:
+            return None
+
+        # Build list of ON ranges
+        ranges: list[str] = []
+        start: int | None = None
+        for i, slot in enumerate(times):
+            if slot.get("status"):
+                if start is None:
+                    start = i
+            else:
+                if start is not None:
+                    ranges.append(f"{start:02d}:00–{i:02d}:00")
+                    start = None
+        if start is not None:
+            ranges.append(f"{start:02d}:00–00:00")
+
+        if not ranges:
+            return "All day OFF"
+        if len(ranges) == 1 and ranges[0] == "00:00–00:00":
+            return "All day ON"
+        return ", ".join(ranges)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        times = self._details.get("times", [])
+        active = [i for i, t in enumerate(times) if t.get("status")]
+        return {
+            "active_hours": [f"{h:02d}:00" for h in active],
+            "active_count": len(active),
+            "total_slots": len(times),
+        }
 
 
 # ── Inverter sensors ─────────────────────────────────────────────────
@@ -209,7 +301,6 @@ class InverterBatteryPercentSensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = "%"
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "battery_percentage"
 
     @property
     def unique_id(self) -> str:
@@ -228,7 +319,6 @@ class InverterBatteryVoltageSensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.VOLTAGE
     _attr_native_unit_of_measurement = "V"
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "battery_voltage"
 
     @property
     def unique_id(self) -> str:
@@ -247,7 +337,6 @@ class InverterEnergyDaySensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_translation_key = "energy_day"
 
     @property
     def unique_id(self) -> str:
@@ -266,7 +355,6 @@ class InverterEnergyWeekSensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_translation_key = "energy_week"
 
     @property
     def unique_id(self) -> str:
@@ -285,7 +373,6 @@ class InverterEnergyMonthSensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_translation_key = "energy_month"
 
     @property
     def unique_id(self) -> str:
@@ -304,7 +391,6 @@ class InverterEnergyTotalSensor(TeslaConnectEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_translation_key = "energy_total"
 
     @property
     def unique_id(self) -> str:
@@ -321,7 +407,7 @@ class InverterEnergyTotalSensor(TeslaConnectEntity, SensorEntity):
 
 class InverterSavingsDaySensor(TeslaConnectEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "savings_day"
+    _attr_icon = "mdi:piggy-bank"
 
     @property
     def unique_id(self) -> str:
@@ -335,13 +421,9 @@ class InverterSavingsDaySensor(TeslaConnectEntity, SensorEntity):
     def native_value(self) -> int | None:
         return self._details.get("savings_day")
 
-    @property
-    def icon(self) -> str:
-        return "mdi:piggy-bank"
-
 
 class InverterFaultsSensor(TeslaConnectEntity, SensorEntity):
-    _attr_translation_key = "faults"
+    _attr_icon = "mdi:alert-circle"
 
     @property
     def unique_id(self) -> str:
@@ -354,7 +436,3 @@ class InverterFaultsSensor(TeslaConnectEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         return self._details.get("faults")
-
-    @property
-    def icon(self) -> str:
-        return "mdi:alert-circle"
