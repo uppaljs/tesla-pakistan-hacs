@@ -5,9 +5,10 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/uppaljs/tesla-pakistan-hacs",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/uppaljs/tesla-pakistan-hacs/issues",
+  "loggers": ["tesla_connect_pakistan"],
   "requirements": ["requests>=2.28.0"],
-  "version": "1.2.0",
-  "integration_type": "device"
+  "version": "1.2.0"
 }
