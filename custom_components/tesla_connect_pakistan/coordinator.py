@@ -8,10 +8,12 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import TeslaConnectApi, TeslaConnectApiError, TeslaConnectAuthError
 from .const import (
+    CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_TYPE_GEYSER,
     DEVICE_TYPE_INVERTER,
@@ -37,16 +39,17 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Args:
             hass: The Home Assistant instance.
             api: An authenticated TeslaConnectApi client.
-            entry: The config entry, used to read options like scan interval.
+            entry: The config entry, used for lifecycle and reading options.
 
         """
         scan_interval: int = entry.options.get(
-            "scan_interval", DEFAULT_SCAN_INTERVAL
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_interval=timedelta(seconds=scan_interval),
         )
         self.api = api
@@ -64,8 +67,9 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             with the keys ``device``, ``details``, and ``type_id``.
 
         Raises:
-            UpdateFailed: When authentication fails or an API-level error
-                prevents the device list from being fetched.
+            ConfigEntryAuthFailed: When authentication fails permanently,
+                halting future updates and triggering the reauth flow.
+            UpdateFailed: When a temporary API error prevents fetching.
 
         """
         try:
@@ -108,6 +112,10 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return result
 
         except TeslaConnectAuthError as exc:
-            raise UpdateFailed(f"Authentication failed: {exc}") from exc
+            # Permanent auth failure — halt updates, trigger reauth flow.
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed: {exc}"
+            ) from exc
         except TeslaConnectApiError as exc:
+            # Temporary API error — coordinator will retry automatically.
             raise UpdateFailed(f"API error: {exc}") from exc
