@@ -24,12 +24,22 @@ PLATFORMS: list[Platform] = [
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Tesla Connect Pakistan from a config entry."""
+    """Set up Tesla Connect Pakistan from a config entry.
+
+    Raises:
+        ConfigEntryAuthFailed: When credentials are invalid or expired,
+            triggering the reauth flow automatically.
+        ConfigEntryNotReady: When the API is temporarily unreachable,
+            causing HA to retry setup automatically.
+
+    """
     api = TeslaConnectApi(
         phone=entry.data[CONF_PHONE],
         password=entry.data[CONF_PASSWORD],
     )
 
+    # Perform the initial login to obtain a token and the device list.
+    # Auth failures trigger reauth; connection failures trigger retry.
     try:
         await hass.async_add_executor_job(api.sign_in)
     except TeslaConnectAuthError as err:
@@ -38,6 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(err) from err
 
     coordinator = TeslaConnectCoordinator(hass, api, entry)
+
+    # First refresh — raises ConfigEntryNotReady on failure, or
+    # ConfigEntryAuthFailed if the coordinator encounters an auth error.
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
