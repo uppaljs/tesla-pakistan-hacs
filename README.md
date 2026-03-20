@@ -127,6 +127,13 @@ The geyser water heater entity supports all standard [Home Assistant water heate
 
 ## Changelog
 
+### v1.3.0
+- **Diagnostics** — download redacted diagnostic data per config entry or per device (Settings → Integrations → Download diagnostics)
+- **System health** — API reachability check, token validity, device count, authenticated user visible in Settings → System → Repairs → System information
+- **Coordinator** — passes `config_entry` to `DataUpdateCoordinator` for proper HA lifecycle management; auth errors during polling now raise `ConfigEntryAuthFailed` (triggers reauth) instead of `UpdateFailed` (silent retry)
+- **Setup failure handling** — fully documented `ConfigEntryAuthFailed` / `ConfigEntryNotReady` behaviour in `async_setup_entry`
+- **Test suite** expanded to 54 tests (was 38)
+
 ### v1.2.0
 - **Options flow** — configurable polling interval (10–300s) and toggle for schedule switches
 - **Reauth flow** — automatic credential re-entry when session expires
