@@ -36,5 +36,17 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The phone number does not match the existing account."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tesla Connect Pakistan Options",
+        "description": "Adjust integration behaviour.",
+        "data": {
+          "enable_schedule_switches": "Create hourly schedule switches",
+          "scan_interval": "Polling interval (seconds)"
+        }
+      }
+    }
   }
 }

@@ -48,6 +48,11 @@ GEYSER_MODES_REVERSE: dict[str, int] = {v: k for k, v in GEYSER_MODES.items()}
 STATUS_OFF: int = 0
 STATUS_ON: int = 1
 
+# --- Options flow keys ---
+
+CONF_ENABLE_SCHEDULE_SWITCHES: str = "enable_schedule_switches"
+CONF_SCAN_INTERVAL: str = "scan_interval"
+
 # --- Polling ---
 
 # Default coordinator update interval in seconds.

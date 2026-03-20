@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_GEYSER, DOMAIN
+from .const import CONF_ENABLE_SCHEDULE_SWITCHES, DEVICE_TYPE_GEYSER, DOMAIN
 from .coordinator import TeslaConnectCoordinator
 from .entity import TeslaConnectEntity
 
@@ -25,6 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tesla Connect switches from a config entry."""
     coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    enable_schedule: bool = entry.options.get(CONF_ENABLE_SCHEDULE_SWITCHES, True)
     entities: list[SwitchEntity] = []
 
     for did, data in coordinator.data.items():
@@ -40,11 +41,14 @@ async def async_setup_entry(
                     GeyserVacationSwitch(coordinator, did, name, type_id),
                 ]
             )
-            # One config-category switch per hourly schedule slot.
-            for hour in range(24):
-                entities.append(
-                    GeyserTimerSlotSwitch(coordinator, did, name, type_id, hour)
-                )
+            # Only create the 24 hourly schedule switches when enabled.
+            if enable_schedule:
+                for hour in range(24):
+                    entities.append(
+                        GeyserTimerSlotSwitch(
+                            coordinator, did, name, type_id, hour
+                        )
+                    )
 
     async_add_entities(entities)
 

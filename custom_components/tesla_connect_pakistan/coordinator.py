@@ -26,19 +26,28 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, api: TeslaConnectApi) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: TeslaConnectApi,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialise the coordinator with a shared API client.
 
         Args:
             hass: The Home Assistant instance.
             api: An authenticated TeslaConnectApi client.
+            entry: The config entry, used to read options like scan interval.
 
         """
+        scan_interval: int = entry.options.get(
+            "scan_interval", DEFAULT_SCAN_INTERVAL
+        )
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=scan_interval),
         )
         self.api = api
 

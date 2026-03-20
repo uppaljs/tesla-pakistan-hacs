@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except TeslaConnectApiError as err:
         raise ConfigEntryNotReady(err) from err
 
-    coordinator = TeslaConnectCoordinator(hass, api)
+    coordinator = TeslaConnectCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

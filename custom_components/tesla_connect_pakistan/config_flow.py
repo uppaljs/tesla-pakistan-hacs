@@ -8,10 +8,23 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
+from homeassistant.core import callback
 
 from .api import TeslaConnectApi, TeslaConnectApiError, TeslaConnectAuthError
-from .const import CONF_PASSWORD, CONF_PHONE, DOMAIN
+from .const import (
+    CONF_ENABLE_SCHEDULE_SWITCHES,
+    CONF_PASSWORD,
+    CONF_PHONE,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +40,14 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tesla Connect Pakistan."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> TeslaConnectOptionsFlow:
+        """Create the options flow handler."""
+        return TeslaConnectOptionsFlow()
 
     # ------------------------------------------------------------------
     # User step (initial setup)
@@ -158,4 +179,41 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+
+# ------------------------------------------------------------------
+# Options flow
+# ------------------------------------------------------------------
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            int, vol.Range(min=10, max=300)
+        ),
+        vol.Required(CONF_ENABLE_SCHEDULE_SWITCHES, default=True): bool,
+    }
+)
+
+
+class TeslaConnectOptionsFlow(OptionsFlowWithReload):
+    """Handle options for Tesla Connect Pakistan.
+
+    Uses OptionsFlowWithReload so that the integration automatically
+    reloads when the user saves new options, picking up the updated
+    scan interval and entity configuration without a manual restart.
+    """
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage integration options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
         )
