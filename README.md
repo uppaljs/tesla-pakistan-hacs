@@ -126,12 +126,165 @@ The geyser water heater entity supports all standard [Home Assistant water heate
 | `water_heater.turn_away_mode_on` | Activate vacation mode |
 | `water_heater.turn_away_mode_off` | Deactivate vacation mode |
 
+## Data Updates
+
+This integration uses **cloud polling** to fetch device data from the Tesla Connect API (`api.tesla-tech.com`).
+
+- **Polling interval:** configurable via Options (default 30 seconds, range 10–300s)
+- **Token auto-refresh:** the session token is automatically refreshed every 55 minutes
+- **Connection recovery:** if the API becomes unreachable, the integration logs once and retries automatically on each poll cycle; when the connection is restored, it logs once and resumes normal operation
+- **Auth failure:** if credentials expire or become invalid, polling halts and HA automatically prompts you to re-authenticate
+
+All entities update simultaneously via a shared `DataUpdateCoordinator`. No individual entity polling occurs.
+
+## Supported Devices
+
+| Device | Model | Support level |
+|--------|-------|---------------|
+| X-Gen Smart Water Geyser | type_id=2 | Full (monitoring + control) |
+| Tesla Inverter | type_id=1 | Monitoring only |
+
+Other Tesla Connect Pakistan devices may work if they appear in the login response, but only geyser and inverter types produce entities.
+
+## Supported Functions
+
+| Function | Platform | Geyser | Inverter |
+|----------|----------|--------|----------|
+| Temperature monitoring | sensor | Current + target temp | — |
+| Energy tracking | sensor | Electric (kWh) + gas (m³) | Day/week/month/year/total (Wh) |
+| Mode display | sensor | Current mode + user mode | — |
+| Schedule display | sensor | Active hours summary | — |
+| Battery monitoring | sensor | — | Percentage + voltage |
+| Savings | sensor | — | Daily savings |
+| Fault reporting | sensor | — | Fault code |
+| Online status | binary_sensor | Connectivity | Connectivity |
+| Burner active | binary_sensor | Heat state | — |
+| Grid / Solar status | binary_sensor | — | Power source status |
+| Boost toggle | switch | Instant heat on/off | — |
+| Vacation mode | switch | Away mode on/off | — |
+| Two-hour mode | switch | Timed heat on/off | — |
+| Hourly schedule | switch × 24 | Per-hour on/off slots | — |
+| Temperature control | water_heater | Set target 30–75 °C | — |
+| Mode control | water_heater | gas/electric/auto/solar | — |
+| On/Off (boost) | water_heater | Turn on = boost, off = normal | — |
+| Away mode (vacation) | water_heater | Vacation mode toggle | — |
+
+## Automation Examples
+
+### Turn on boost when temperature drops below 40°C
+
+```yaml
+automation:
+  - alias: "Geyser boost when cold"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.221b_geyser_current_temperature
+        below: 40
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.221b_geyser_boost
+```
+
+### Notify when geyser goes offline
+
+```yaml
+automation:
+  - alias: "Geyser offline alert"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.221b_geyser_online
+        to: "off"
+        for: "00:05:00"
+    action:
+      - service: notify.mobile_app
+        data:
+          message: "Geyser has been offline for 5 minutes"
+```
+
+### Set geyser to gas mode at night, auto during the day
+
+```yaml
+automation:
+  - alias: "Geyser night gas mode"
+    trigger:
+      - platform: time
+        at: "22:00:00"
+    action:
+      - service: water_heater.set_operation_mode
+        target:
+          entity_id: water_heater.221b_geyser_water_heater
+        data:
+          operation_mode: gas
+
+  - alias: "Geyser day auto mode"
+    trigger:
+      - platform: time
+        at: "06:00:00"
+    action:
+      - service: water_heater.set_operation_mode
+        target:
+          entity_id: water_heater.221b_geyser_water_heater
+        data:
+          operation_mode: auto
+```
+
+### Activate vacation mode when leaving home
+
+```yaml
+automation:
+  - alias: "Geyser vacation when away"
+    trigger:
+      - platform: state
+        entity_id: person.junaid
+        to: "not_home"
+        for: "01:00:00"
+    action:
+      - service: water_heater.turn_away_mode_on
+        target:
+          entity_id: water_heater.221b_geyser_water_heater
+```
+
+## Known Limitations
+
+- **Cloud-only:** requires internet access to reach `api.tesla-tech.com`; no local/LAN control
+- **No push notifications:** the integration polls the API; there is no real-time push from the device
+- **Single account:** each integration instance supports one Tesla Connect account
+- **Device list from login only:** the device list is only refreshed when the token expires and a re-login occurs (every ~55 minutes); new devices added via the mobile app may take up to an hour to appear
+- **Inverter control:** inverter devices are monitoring-only; no control commands were found in the API
+- **Timer schedule granularity:** the schedule operates in 1-hour blocks (24 slots); sub-hour scheduling is not supported by the API
+- **No energy dashboard native support:** electric_units and gas_units are cumulative counters from the device; they may reset or behave unexpectedly depending on device firmware
+
+## Troubleshooting
+
+### Integration shows "Authentication failed"
+Your phone number or password is incorrect, or the Tesla Connect account has been changed. Go to **Settings → Devices & Services → Tesla Connect Pakistan** and click **Reconfigure** to update your credentials.
+
+### Entities show "Unavailable"
+The Tesla Connect API may be temporarily unreachable. Check your internet connection. The integration will automatically recover when the API is available again. Check **Settings → System → Repairs → System information** for the server reachability status.
+
+### Temperature or mode not updating
+The integration polls every 30 seconds by default. If you need faster updates, go to the integration's **Configure** options and reduce the polling interval (minimum 10 seconds).
+
+### Devices not appearing after adding in the mobile app
+The device list is fetched during login. Force a refresh by going to **Settings → Devices & Services → Tesla Connect Pakistan → three dots → Reload**.
+
+### Schedule switches not visible
+Schedule switches are disabled by default in Options. Go to **Configure** on the integration card and enable "Create hourly schedule switches".
+
+## Use Cases
+
+- **Energy savings:** monitor gas and electric consumption over time, create automations to switch to the most efficient mode based on time of day
+- **Comfort scheduling:** use the 24-hour timer schedule to heat water before you wake up and before you return home
+- **Vacation mode:** automatically activate vacation mode when everyone leaves home using presence detection
+- **Safety monitoring:** get alerts when the geyser goes offline or the burner stays active for unusually long periods
+- **Solar optimization:** switch between solar and grid modes based on solar panel output from your inverter sensors
+- **Dashboard:** build a Lovelace dashboard showing real-time geyser temperature, mode, and energy consumption alongside your inverter's battery and solar status
+
 ## Technical Details
 
-- **Polling interval:** configurable (default 30 seconds)
-- **Token auto-refresh:** every 55 minutes
-- **API:** Cloud polling via Tesla Connect API (`api.tesla-tech.com`)
-- **HTTP fingerprint:** Mimics the official Tesla Connect Android app (OkHttp UA, compact JSON, timestamp auth header)
+- **HTTP fingerprint:** mimics the official Tesla Connect Android app (OkHttp UA, compact JSON, timestamp auth header)
+- **External library:** all API communication handled by [pyteslaconnectpk](https://pypi.org/project/pyteslaconnectpk/) on PyPI
 
 ## Changelog
 

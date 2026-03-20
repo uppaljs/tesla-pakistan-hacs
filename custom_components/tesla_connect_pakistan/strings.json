@@ -49,6 +49,99 @@
       "unique_id_mismatch": "The phone number does not match the existing account."
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "burner": {
+        "name": "Burner"
+      },
+      "grid_status": {
+        "name": "Grid"
+      },
+      "online": {
+        "name": "Online"
+      },
+      "solar_status": {
+        "name": "Solar"
+      }
+    },
+    "sensor": {
+      "battery_percentage": {
+        "name": "Battery"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "current_mode": {
+        "name": "Current mode"
+      },
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "electric_consumption": {
+        "name": "Electric consumption"
+      },
+      "energy_day": {
+        "name": "Energy today"
+      },
+      "energy_month": {
+        "name": "Energy this month"
+      },
+      "energy_total": {
+        "name": "Energy total"
+      },
+      "energy_week": {
+        "name": "Energy this week"
+      },
+      "faults": {
+        "name": "Faults"
+      },
+      "gas_consumption": {
+        "name": "Gas consumption"
+      },
+      "savings_day": {
+        "name": "Savings today"
+      },
+      "schedule": {
+        "name": "Schedule"
+      },
+      "status_label": {
+        "name": "Status"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "user_mode": {
+        "name": "User mode"
+      }
+    },
+    "switch": {
+      "boost": {
+        "name": "Boost"
+      },
+      "timer_slot": {
+        "name": "Schedule {start}–{end}"
+      },
+      "two_hour_mode": {
+        "name": "Two-hour mode"
+      },
+      "vacation_mode": {
+        "name": "Vacation mode"
+      }
+    },
+    "water_heater": {
+      "water_heater": {
+        "name": "Water heater"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error communicating with Tesla Connect API: {error}"
+    },
+    "auth_failed": {
+      "message": "Authentication failed: {error}"
+    }
+  },
   "system_health": {
     "info": {
       "api_endpoint": "API endpoint",

@@ -48,16 +48,12 @@ class DeviceOnlineSensor(TeslaConnectEntity, BinarySensorEntity):
     """Binary sensor indicating whether the device is reachable."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_translation_key = "online"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_online"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Online"
 
     @property
     def is_on(self) -> bool | None:
@@ -69,16 +65,12 @@ class GeyserBurnerSensor(TeslaConnectEntity, BinarySensorEntity):
     """Binary sensor indicating whether the geyser burner is active."""
 
     _attr_device_class = BinarySensorDeviceClass.HEAT
+    _attr_translation_key = "burner"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_burner"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Burner"
 
     @property
     def is_on(self) -> bool | None:
@@ -91,16 +83,12 @@ class InverterGridSensor(TeslaConnectEntity, BinarySensorEntity):
     """Binary sensor indicating whether the grid supply is available."""
 
     _attr_device_class = BinarySensorDeviceClass.POWER
+    _attr_translation_key = "grid_status"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_grid_status"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Grid"
 
     @property
     def is_on(self) -> bool | None:
@@ -113,17 +101,12 @@ class InverterSolarSensor(TeslaConnectEntity, BinarySensorEntity):
     """Binary sensor indicating whether the solar input is active."""
 
     _attr_device_class = BinarySensorDeviceClass.POWER
-    _attr_icon = "mdi:solar-power"
+    _attr_translation_key = "solar_status"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_solar_status"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Solar"
 
     @property
     def is_on(self) -> bool | None:

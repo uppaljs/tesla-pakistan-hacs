@@ -1,0 +1,91 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "burner": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
+      },
+      "grid_status": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off": "mdi:transmission-tower-off"
+        }
+      },
+      "online": {
+        "default": "mdi:check-network-outline",
+        "state": {
+          "off": "mdi:close-network-outline"
+        }
+      },
+      "solar_status": {
+        "default": "mdi:solar-power",
+        "state": {
+          "off": "mdi:solar-power-variant-outline"
+        }
+      }
+    },
+    "sensor": {
+      "current_mode": {
+        "default": "mdi:auto-fix",
+        "state": {
+          "Automatic": "mdi:auto-fix",
+          "Electricity": "mdi:lightning-bolt",
+          "Gas": "mdi:fire",
+          "Solar (Off)": "mdi:solar-power-variant-outline",
+          "Solar (On)": "mdi:solar-power"
+        }
+      },
+      "electric_consumption": {
+        "default": "mdi:lightning-bolt"
+      },
+      "faults": {
+        "default": "mdi:alert-circle"
+      },
+      "gas_consumption": {
+        "default": "mdi:fire-circle"
+      },
+      "savings_day": {
+        "default": "mdi:piggy-bank"
+      },
+      "schedule": {
+        "default": "mdi:calendar-clock"
+      },
+      "status_label": {
+        "default": "mdi:water-boiler"
+      },
+      "user_mode": {
+        "default": "mdi:cog"
+      }
+    },
+    "switch": {
+      "boost": {
+        "default": "mdi:flash",
+        "state": {
+          "off": "mdi:flash-off"
+        }
+      },
+      "timer_slot": {
+        "default": "mdi:clock-outline",
+        "state": {
+          "on": "mdi:clock-check"
+        }
+      },
+      "two_hour_mode": {
+        "default": "mdi:timer-2"
+      },
+      "vacation_mode": {
+        "default": "mdi:beach",
+        "state": {
+          "off": "mdi:home"
+        }
+      }
+    },
+    "water_heater": {
+      "water_heater": {
+        "default": "mdi:water-boiler"
+      }
+    }
+  }
+}

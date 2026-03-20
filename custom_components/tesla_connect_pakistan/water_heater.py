@@ -73,13 +73,13 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
 
     Supported HA features:
 
-    * **TARGET_TEMPERATURE** — set temperature (30–75 °C).
+    * **TARGET_TEMPERATURE** — set temperature (30-75 C).
     * **OPERATION_MODE** — gas / electric / auto / solar_on / solar_off.
     * **AWAY_MODE** — maps to vacation mode.
     * **ON_OFF** — turn_on activates boost; turn_off deactivates it.
     """
 
-    _attr_icon = "mdi:water-boiler"
+    _attr_translation_key = "water_heater"
     _attr_max_temp = 75
     _attr_min_temp = 30
     _attr_operation_list = OPERATION_LIST
@@ -96,11 +96,6 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_water_heater"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Water heater"
 
     # ------------------------------------------------------------------
     # State

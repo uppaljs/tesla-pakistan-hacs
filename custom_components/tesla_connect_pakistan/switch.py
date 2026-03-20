@@ -59,17 +59,12 @@ async def async_setup_entry(
 class GeyserBoostSwitch(TeslaConnectEntity, SwitchEntity):
     """Switch to activate instant-heat boost mode on a geyser."""
 
-    _attr_icon = "mdi:flash"
+    _attr_translation_key = "boost"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_boost"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Boost"
 
     @property
     def is_on(self) -> bool | None:
@@ -95,17 +90,12 @@ class GeyserBoostSwitch(TeslaConnectEntity, SwitchEntity):
 class GeyserTwoHourSwitch(TeslaConnectEntity, SwitchEntity):
     """Switch to activate the two-hour heating window."""
 
-    _attr_icon = "mdi:timer-2"
+    _attr_translation_key = "two_hour_mode"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_two_hour"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Two-hour mode"
 
     @property
     def is_on(self) -> bool | None:
@@ -131,17 +121,12 @@ class GeyserTwoHourSwitch(TeslaConnectEntity, SwitchEntity):
 class GeyserVacationSwitch(TeslaConnectEntity, SwitchEntity):
     """Switch to activate vacation mode (away) on a geyser."""
 
-    _attr_icon = "mdi:beach"
+    _attr_translation_key = "vacation_mode"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_vacation"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Vacation mode"
 
     @property
     def is_on(self) -> bool | None:
@@ -179,6 +164,7 @@ class GeyserTimerSlotSwitch(TeslaConnectEntity, SwitchEntity):
     """
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "timer_slot"
 
     def __init__(
         self,
@@ -195,29 +181,21 @@ class GeyserTimerSlotSwitch(TeslaConnectEntity, SwitchEntity):
             device_id: Unique device identifier from the API.
             device_name: Human-readable device name.
             device_type: Device type constant.
-            hour: Hour of the day (0–23) this switch controls.
+            hour: Hour of the day (0-23) this switch controls.
 
         """
         super().__init__(coordinator, device_id, device_name, device_type)
         self._hour = hour
+        end = (hour + 1) % 24
+        self._attr_translation_placeholders = {
+            "start": f"{hour:02d}:00",
+            "end": f"{end:02d}:00",
+        }
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_timer_{self._hour:02d}"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        end = (self._hour + 1) % 24
-        return f"Schedule {self._hour:02d}:00\u2013{end:02d}:00"
-
-    @property
-    def icon(self) -> str:
-        """Return a dynamic icon based on slot state."""
-        if self.is_on:
-            return "mdi:clock-check"
-        return "mdi:clock-outline"
 
     @property
     def _current_times(self) -> list[dict[str, Any]]:

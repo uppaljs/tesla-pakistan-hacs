@@ -86,6 +86,7 @@ async def async_setup_entry(
 class GeyserTempSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting the current water temperature."""
 
+    _attr_translation_key = "current_temperature"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -96,11 +97,6 @@ class GeyserTempSensor(TeslaConnectEntity, SensorEntity):
         return f"{self._device_id}_current_temp"
 
     @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Current temperature"
-
-    @property
     def native_value(self) -> float | None:
         """Return the current temperature in degrees Celsius."""
         return self._details.get("curr_temp")
@@ -109,6 +105,7 @@ class GeyserTempSensor(TeslaConnectEntity, SensorEntity):
 class GeyserTargetTempSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting the target temperature limit."""
 
+    _attr_translation_key = "target_temperature"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -119,11 +116,6 @@ class GeyserTargetTempSensor(TeslaConnectEntity, SensorEntity):
         return f"{self._device_id}_target_temp"
 
     @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Target temperature"
-
-    @property
     def native_value(self) -> float | None:
         """Return the target temperature in degrees Celsius."""
         return self._details.get("temp_limit")
@@ -132,17 +124,12 @@ class GeyserTargetTempSensor(TeslaConnectEntity, SensorEntity):
 class GeyserStatusSensor(TeslaConnectEntity, SensorEntity):
     """Sensor showing the device status label from the API."""
 
-    _attr_icon = "mdi:water-boiler"
+    _attr_translation_key = "status_label"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_status_label"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Status"
 
     @property
     def native_value(self) -> str | None:
@@ -157,15 +144,12 @@ class GeyserModeSensor(TeslaConnectEntity, SensorEntity):
     availability, so ``curr_mode`` may differ from ``user_mode``.
     """
 
+    _attr_translation_key = "current_mode"
+
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_current_mode"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Current mode"
 
     @property
     def native_value(self) -> str | None:
@@ -175,33 +159,17 @@ class GeyserModeSensor(TeslaConnectEntity, SensorEntity):
             return None
         return _MODE_LABELS.get(mode_val, str(mode_val))
 
-    @property
-    def icon(self) -> str:
-        """Return a mode-specific icon."""
-        mode_val = self._details.get("curr_mode")
-        if mode_val == 0:
-            return "mdi:fire"
-        if mode_val == 1:
-            return "mdi:lightning-bolt"
-        if mode_val in (3, 4):
-            return "mdi:solar-power"
-        return "mdi:auto-fix"
-
 
 class GeyserUserModeSensor(TeslaConnectEntity, SensorEntity):
     """Sensor showing the mode the user selected (may differ from current)."""
 
-    _attr_icon = "mdi:cog"
+    _attr_translation_key = "user_mode"
+    _attr_entity_registry_enabled_default = False
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_user_mode"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "User mode"
 
     @property
     def native_value(self) -> str | None:
@@ -215,8 +183,8 @@ class GeyserUserModeSensor(TeslaConnectEntity, SensorEntity):
 class GeyserGasUnitsSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting cumulative gas consumption in cubic metres."""
 
+    _attr_translation_key = "gas_consumption"
     _attr_device_class = SensorDeviceClass.GAS
-    _attr_icon = "mdi:fire-circle"
     _attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
@@ -224,11 +192,6 @@ class GeyserGasUnitsSensor(TeslaConnectEntity, SensorEntity):
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_gas_units"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Gas consumption"
 
     @property
     def native_value(self) -> int | None:
@@ -244,6 +207,7 @@ class GeyserElectricUnitsSensor(TeslaConnectEntity, SensorEntity):
     value exceeds 1 000 and shows "kW").
     """
 
+    _attr_translation_key = "electric_consumption"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -253,11 +217,6 @@ class GeyserElectricUnitsSensor(TeslaConnectEntity, SensorEntity):
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_electric_units"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Electric consumption"
 
     @property
     def native_value(self) -> float | None:
@@ -275,17 +234,12 @@ class GeyserScheduleSensor(TeslaConnectEntity, SensorEntity):
     exposes individual active hours in extra state attributes.
     """
 
-    _attr_icon = "mdi:calendar-clock"
+    _attr_translation_key = "schedule"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_schedule"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Schedule"
 
     @property
     def native_value(self) -> str | None:
@@ -334,6 +288,7 @@ class GeyserScheduleSensor(TeslaConnectEntity, SensorEntity):
 class InverterBatteryPercentSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting the inverter battery charge percentage."""
 
+    _attr_translation_key = "battery_percentage"
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = "%"
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -344,11 +299,6 @@ class InverterBatteryPercentSensor(TeslaConnectEntity, SensorEntity):
         return f"{self._device_id}_battery_pct"
 
     @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Battery"
-
-    @property
     def native_value(self) -> int | None:
         """Return the battery percentage."""
         return self._details.get("battery_percentage")
@@ -357,6 +307,7 @@ class InverterBatteryPercentSensor(TeslaConnectEntity, SensorEntity):
 class InverterBatteryVoltageSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting the inverter battery voltage."""
 
+    _attr_translation_key = "battery_voltage"
     _attr_device_class = SensorDeviceClass.VOLTAGE
     _attr_native_unit_of_measurement = "V"
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -367,11 +318,6 @@ class InverterBatteryVoltageSensor(TeslaConnectEntity, SensorEntity):
         return f"{self._device_id}_battery_voltage"
 
     @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Battery voltage"
-
-    @property
     def native_value(self) -> int | None:
         """Return the battery voltage in volts."""
         return self._details.get("battery_voltage")
@@ -380,6 +326,7 @@ class InverterBatteryVoltageSensor(TeslaConnectEntity, SensorEntity):
 class InverterEnergyDaySensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting daily energy production."""
 
+    _attr_translation_key = "energy_day"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -390,11 +337,6 @@ class InverterEnergyDaySensor(TeslaConnectEntity, SensorEntity):
         return f"{self._device_id}_energy_day"
 
     @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Energy today"
-
-    @property
     def native_value(self) -> int | None:
         """Return today's energy in watt-hours."""
         return self._details.get("energy_day")
@@ -403,19 +345,16 @@ class InverterEnergyDaySensor(TeslaConnectEntity, SensorEntity):
 class InverterEnergyWeekSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting weekly energy production."""
 
+    _attr_translation_key = "energy_week"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_registry_enabled_default = False
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_energy_week"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Energy this week"
 
     @property
     def native_value(self) -> int | None:
@@ -426,19 +365,16 @@ class InverterEnergyWeekSensor(TeslaConnectEntity, SensorEntity):
 class InverterEnergyMonthSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting monthly energy production."""
 
+    _attr_translation_key = "energy_month"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_entity_registry_enabled_default = False
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_energy_month"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Energy this month"
 
     @property
     def native_value(self) -> int | None:
@@ -449,6 +385,7 @@ class InverterEnergyMonthSensor(TeslaConnectEntity, SensorEntity):
 class InverterEnergyTotalSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting lifetime energy production."""
 
+    _attr_translation_key = "energy_total"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -459,11 +396,6 @@ class InverterEnergyTotalSensor(TeslaConnectEntity, SensorEntity):
         return f"{self._device_id}_energy_total"
 
     @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Energy total"
-
-    @property
     def native_value(self) -> int | None:
         """Return the lifetime energy in watt-hours."""
         return self._details.get("energy_total")
@@ -472,18 +404,13 @@ class InverterEnergyTotalSensor(TeslaConnectEntity, SensorEntity):
 class InverterSavingsDaySensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting daily energy savings."""
 
-    _attr_icon = "mdi:piggy-bank"
+    _attr_translation_key = "savings_day"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_savings_day"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Savings today"
 
     @property
     def native_value(self) -> int | None:
@@ -494,17 +421,12 @@ class InverterSavingsDaySensor(TeslaConnectEntity, SensorEntity):
 class InverterFaultsSensor(TeslaConnectEntity, SensorEntity):
     """Sensor reporting the current inverter fault code."""
 
-    _attr_icon = "mdi:alert-circle"
+    _attr_translation_key = "faults"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this entity."""
         return f"{self._device_id}_faults"
-
-    @property
-    def name(self) -> str:
-        """Return the display name."""
-        return "Faults"
 
     @property
     def native_value(self) -> int | None:
