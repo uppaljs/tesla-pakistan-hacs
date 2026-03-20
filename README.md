@@ -17,8 +17,8 @@ Unofficial Home Assistant custom integration for **Tesla Industries Pakistan** s
 
 ### Geyser
 - **Water Heater entity** — set temperature, change mode (gas / electric / auto / solar), turn on/off (boost), away mode (vacation)
-- **Sensors** — current temperature, target temperature, status, current mode, user mode, gas units, electric units
-- **Switches** — boost, vacation mode, two-hour mode, 24 hourly timer slots
+- **Sensors** — current temperature, target temperature, status, current mode, user mode, gas consumption (m³), electric consumption (kWh), schedule summary
+- **Switches** — boost, vacation mode, two-hour mode, 24 hourly schedule slots (optional, can be disabled)
 - **Binary sensors** — online status, burner active
 
 ### Inverter
@@ -48,6 +48,25 @@ Unofficial Home Assistant custom integration for **Tesla Industries Pakistan** s
 3. Enter your phone number (format: `03XXXXXXXXX`) and password (same as the Tesla Connect app)
 4. Your devices will be automatically discovered and added
 
+### Options
+
+After setup, click **Configure** on the integration card to adjust:
+
+| Option | Default | Range | Description |
+|--------|---------|-------|-------------|
+| Polling interval | 30 sec | 10–300 sec | How often to poll the API for device updates |
+| Create hourly schedule switches | ON | — | Whether to create the 24 hourly timer switches |
+
+Changing options automatically reloads the integration — no restart needed.
+
+### Re-authentication
+
+If your session expires or your password changes, Home Assistant will automatically prompt you to re-enter your credentials via the re-authentication flow.
+
+### Reconfigure
+
+To update your phone number or password on an existing entry, click the three dots menu on the integration card and select **Reconfigure**.
+
 ## Entities
 
 For each **geyser** device:
@@ -58,14 +77,15 @@ For each **geyser** device:
 | Current temperature | `sensor` | Current water temperature (°C) |
 | Target temperature | `sensor` | Target temperature (°C) |
 | Status | `sensor` | Status label from device |
-| Current mode | `sensor` | Active operating mode |
-| User mode | `sensor` | User-selected mode |
-| Gas units | `sensor` | Gas consumption |
-| Electric units | `sensor` | Electric consumption (Wh) |
+| Current mode | `sensor` | What the geyser is actually running on (gas/electric/etc.) |
+| User mode | `sensor` | What the user selected (may differ from current in auto mode) |
+| Gas consumption | `sensor` | Cumulative gas usage (m³) |
+| Electric consumption | `sensor` | Cumulative electric usage (kWh) |
+| Schedule | `sensor` | Summary of active hours (e.g. "04:00–00:00") |
 | Boost | `switch` | Instant heat toggle |
 | Vacation mode | `switch` | Vacation mode toggle |
 | Two-hour mode | `switch` | Two-hour mode toggle |
-| Timer 00:00–23:00 | `switch` × 24 | Hourly timer schedule slots |
+| Schedule 00:00–01:00 … 23:00–00:00 | `switch` × 24 | Hourly timer schedule slots (config category, optional) |
 | Online | `binary_sensor` | Device connectivity |
 | Burner | `binary_sensor` | Burner active |
 
@@ -92,7 +112,7 @@ The geyser water heater entity supports all standard [Home Assistant water heate
 | Service | Action |
 |---------|--------|
 | `water_heater.set_temperature` | Set target temperature (30–75 °C) |
-| `water_heater.set_operation_mode` | Set mode: `gas`, `electric`, `auto`, `solar_on`, `solar_off` |
+| `water_heater.set_operation_mode` | Set mode: `auto`, `electric`, `gas`, `solar_off`, `solar_on` |
 | `water_heater.turn_on` | Activate boost (immediate heating) |
 | `water_heater.turn_off` | Deactivate boost |
 | `water_heater.turn_away_mode_on` | Activate vacation mode |
@@ -100,9 +120,33 @@ The geyser water heater entity supports all standard [Home Assistant water heate
 
 ## Technical Details
 
-- **Polling interval:** 30 seconds
+- **Polling interval:** configurable (default 30 seconds)
 - **Token auto-refresh:** every 55 minutes
 - **API:** Cloud polling via Tesla Connect API (`api.tesla-tech.com`)
+- **HTTP fingerprint:** Mimics the official Tesla Connect Android app (OkHttp UA, compact JSON, timestamp auth header)
+
+## Changelog
+
+### v1.2.0
+- **Options flow** — configurable polling interval (10–300s) and toggle for schedule switches
+- **Reauth flow** — automatic credential re-entry when session expires
+- **Reconfigure flow** — update phone/password without deleting the entry
+- **Electric units** now displayed in kWh (was raw watts)
+- **Gas units** now displayed in m³ with proper HA gas device class
+- **Schedule summary sensor** — shows active ranges like "04:00–00:00"
+- **Schedule switches** moved to config category, renamed "Schedule HH:00–HH:00"
+- **Mode sensors** — friendly labels, distinct icons, clear curr_mode vs user_mode
+- **Brand assets** added for HACS logo display
+- **HA coding style** — full PEP 257/PEP 8 compliance, Google-style docstrings
+- **Test suite** — 38 tests covering API, config flow, sensors, switches, water heater
+- **Error handling** — `ConfigEntryAuthFailed` for auth errors, `ConfigEntryNotReady` for connection errors
+- **manifest.json** — `integration_type: hub`, `loggers` field added
+
+### v1.0.0
+- Initial release
+- Water heater, sensors, switches, binary sensors for geyser and inverter
+- Automatic device discovery on login
+- HACS compatible
 
 ## License
 
