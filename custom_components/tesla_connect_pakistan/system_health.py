@@ -27,7 +27,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         return {"api_endpoint": BASE_URL}
 
     entry = entries[0]
-    coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TeslaConnectCoordinator = entry.runtime_data.coordinator
 
     device_count = len(coordinator.api.devices) if coordinator.api.devices else 0
 

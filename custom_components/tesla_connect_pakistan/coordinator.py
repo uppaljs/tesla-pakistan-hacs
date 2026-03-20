@@ -51,14 +51,13 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=scan_interval),
         )
         self.api = api
+        self._was_unavailable = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Poll every registered device and return a mapping keyed by device_id.
 
-        Re-authenticates transparently when the token has expired before
-        issuing per-device detail requests.  Individual device failures are
-        logged and silently replaced with an empty details dict so that a
-        single unreachable device does not abort the entire update cycle.
+        Logs once when the API becomes unreachable and once when it
+        recovers, per the ``log-when-unavailable`` quality rule.
 
         Returns:
             A dict whose keys are device_id strings.  Each value is a dict
@@ -105,11 +104,19 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "type_id": type_id,
                 }
 
+            # Log once when connection is restored after a failure.
+            if self._was_unavailable:
+                _LOGGER.info("Connection to Tesla Connect API restored")
+                self._was_unavailable = False
+
             return result
 
         except TeslaConnectAuthError as exc:
             # Permanent auth failure — halt updates, trigger reauth flow.
             raise ConfigEntryAuthFailed(f"Authentication failed: {exc}") from exc
         except TeslaConnectApiError as exc:
-            # Temporary API error — coordinator will retry automatically.
+            # Log once when the API becomes unreachable.
+            if not self._was_unavailable:
+                _LOGGER.warning("Tesla Connect API unavailable: %s", exc)
+                self._was_unavailable = True
             raise UpdateFailed(f"API error: {exc}") from exc

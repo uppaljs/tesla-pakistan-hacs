@@ -41,6 +41,14 @@ Unofficial Home Assistant custom integration for **Tesla Industries Pakistan** s
 1. Copy the `custom_components/tesla_connect_pakistan` folder into your Home Assistant `config/custom_components/` directory
 2. Restart Home Assistant
 
+## Removal
+
+1. Go to **Settings → Devices & Services**
+2. Click on the **Tesla Connect Pakistan** integration card
+3. Click the three dots menu → **Delete**
+4. Restart Home Assistant
+5. (Optional) Uninstall from HACS: **HACS → Integrations → Tesla Connect Pakistan → Uninstall**
+
 ## Configuration
 
 1. Go to **Settings → Devices & Services → Add Integration**

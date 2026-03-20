@@ -11,9 +11,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_ENABLE_SCHEDULE_SWITCHES, DEVICE_TYPE_GEYSER, DOMAIN
+from .const import CONF_ENABLE_SCHEDULE_SWITCHES, DEVICE_TYPE_GEYSER
 from .coordinator import TeslaConnectCoordinator
 from .entity import TeslaConnectEntity
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tesla Connect switches from a config entry."""
-    coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TeslaConnectCoordinator = entry.runtime_data.coordinator
     enable_schedule: bool = entry.options.get(CONF_ENABLE_SCHEDULE_SWITCHES, True)
     entities: list[SwitchEntity] = []
 

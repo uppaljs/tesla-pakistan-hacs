@@ -25,7 +25,7 @@ async def async_get_config_entry_diagnostics(
     Includes redacted config data, current options, and the full
     coordinator data snapshot for all devices.
     """
-    coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TeslaConnectCoordinator = entry.runtime_data.coordinator
 
     device_diagnostics: dict[str, Any] = {}
     if coordinator.data:
@@ -65,7 +65,7 @@ async def async_get_device_diagnostics(
     Locates the device by matching its identifier against the
     coordinator data and returns the redacted detail payload.
     """
-    coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TeslaConnectCoordinator = entry.runtime_data.coordinator
 
     # Extract the device_id from the device registry identifiers.
     device_id: str | None = None

@@ -7,6 +7,10 @@
         "data": {
           "phone": "Phone number",
           "password": "Password"
+        },
+        "data_description": {
+          "phone": "Your Tesla Connect phone number (e.g. 03XXXXXXXXX).",
+          "password": "Your Tesla Connect account password."
         }
       },
       "reauth_confirm": {
@@ -15,6 +19,10 @@
         "data": {
           "phone": "Phone number",
           "password": "Password"
+        },
+        "data_description": {
+          "phone": "Your Tesla Connect phone number (e.g. 03XXXXXXXXX).",
+          "password": "Your Tesla Connect account password."
         }
       },
       "reconfigure": {
@@ -23,6 +31,10 @@
         "data": {
           "phone": "Phone number",
           "password": "Password"
+        },
+        "data_description": {
+          "phone": "Your Tesla Connect phone number (e.g. 03XXXXXXXXX).",
+          "password": "Your new Tesla Connect account password."
         }
       }
     },
@@ -54,6 +66,10 @@
         "data": {
           "enable_schedule_switches": "Create hourly schedule switches",
           "scan_interval": "Polling interval (seconds)"
+        },
+        "data_description": {
+          "enable_schedule_switches": "When enabled, creates 24 individual switches for the hourly geyser schedule.",
+          "scan_interval": "How often to poll the Tesla Connect API for updates (10–300 seconds)."
         }
       }
     }

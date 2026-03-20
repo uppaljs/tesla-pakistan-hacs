@@ -10,9 +10,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_GEYSER, DEVICE_TYPE_INVERTER, DOMAIN
+from .const import DEVICE_TYPE_GEYSER, DEVICE_TYPE_INVERTER
 from .coordinator import TeslaConnectCoordinator
 from .entity import TeslaConnectEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -21,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tesla Connect binary sensors from a config entry."""
-    coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TeslaConnectCoordinator = entry.runtime_data.coordinator
     entities: list[BinarySensorEntity] = []
 
     for did, data in coordinator.data.items():

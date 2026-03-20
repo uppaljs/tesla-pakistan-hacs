@@ -18,9 +18,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_GEYSER, DEVICE_TYPE_INVERTER, DOMAIN
+from .const import DEVICE_TYPE_GEYSER, DEVICE_TYPE_INVERTER
 from .coordinator import TeslaConnectCoordinator
 from .entity import TeslaConnectEntity
+
+PARALLEL_UPDATES = 0
 
 # Friendly labels for geyser mode integers.
 _MODE_LABELS: dict[int, str] = {
@@ -38,7 +40,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tesla Connect sensors from a config entry."""
-    coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TeslaConnectCoordinator = entry.runtime_data.coordinator
     entities: list[SensorEntity] = []
 
     for did, data in coordinator.data.items():

@@ -20,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DEVICE_TYPE_GEYSER,
-    DOMAIN,
     GEYSER_MODE_AUTOMATIC,
     GEYSER_MODE_ELECTRICITY,
     GEYSER_MODE_GAS,
@@ -31,6 +30,8 @@ from .const import (
 )
 from .coordinator import TeslaConnectCoordinator
 from .entity import TeslaConnectEntity
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tesla Connect water heater entities from a config entry."""
-    coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TeslaConnectCoordinator = entry.runtime_data.coordinator
     entities: list[WaterHeaterEntity] = []
 
     for did, data in coordinator.data.items():
