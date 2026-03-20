@@ -157,7 +157,7 @@ class GeyserModeSensor(TeslaConnectEntity, SensorEntity):
         mode_val = self._details.get("curr_mode")
         if mode_val is None:
             return None
-        return _MODE_LABELS.get(mode_val, str(mode_val))
+        return _MODE_LABELS.get(mode_val, "Automatic")
 
 
 class GeyserUserModeSensor(TeslaConnectEntity, SensorEntity):
@@ -177,7 +177,7 @@ class GeyserUserModeSensor(TeslaConnectEntity, SensorEntity):
         mode_val = self._details.get("user_mode")
         if mode_val is None:
             return None
-        return _MODE_LABELS.get(mode_val, str(mode_val))
+        return _MODE_LABELS.get(mode_val, "Automatic")
 
 
 class GeyserGasUnitsSensor(TeslaConnectEntity, SensorEntity):

@@ -116,7 +116,7 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         mode_val = self._details.get("curr_mode")
         if mode_val is None:
             return None
-        return _MODE_TO_HA_STATE.get(mode_val, STATE_GAS)
+        return _MODE_TO_HA_STATE.get(mode_val, STATE_ECO)
 
     # ------------------------------------------------------------------
     # Temperatures
