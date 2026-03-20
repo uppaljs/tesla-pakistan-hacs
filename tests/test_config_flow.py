@@ -53,11 +53,11 @@ def mock_sign_in_api_error() -> MagicMock:
         yield mock_cls
 
 
-class TestConfigFlow:
-    """Tests for TeslaConnectConfigFlow."""
+class TestUserStep:
+    """Tests for the initial user configuration step."""
 
-    async def test_user_step_shows_form(self, hass) -> None:
-        """The user step should show the phone/password form."""
+    async def test_shows_form(self, hass) -> None:
+        """The user step should display the phone/password form."""
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
@@ -66,7 +66,7 @@ class TestConfigFlow:
         assert CONF_PHONE in result["data_schema"].schema
         assert CONF_PASSWORD in result["data_schema"].schema
 
-    async def test_user_step_success(self, hass, mock_sign_in_success) -> None:
+    async def test_success_creates_entry(self, hass, mock_sign_in_success) -> None:
         """Valid credentials should create a config entry."""
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -78,7 +78,7 @@ class TestConfigFlow:
         assert result["data"][CONF_PHONE] == MOCK_PHONE
         assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
-    async def test_user_step_invalid_auth(
+    async def test_invalid_auth_shows_error(
         self, hass, mock_sign_in_auth_error
     ) -> None:
         """Invalid credentials should show an auth error."""
@@ -90,7 +90,7 @@ class TestConfigFlow:
         assert result["type"] == "form"
         assert result["errors"] == {"base": "invalid_auth"}
 
-    async def test_user_step_cannot_connect(
+    async def test_cannot_connect_shows_error(
         self, hass, mock_sign_in_api_error
     ) -> None:
         """Connection failures should show a connect error."""
@@ -101,3 +101,31 @@ class TestConfigFlow:
         )
         assert result["type"] == "form"
         assert result["errors"] == {"base": "cannot_connect"}
+
+
+class TestReauthFlow:
+    """Tests for the re-authentication flow."""
+
+    async def test_reauth_shows_form(self, hass) -> None:
+        """The reauth step should display a credentials form."""
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reauth"}, data=MOCK_CONFIG_ENTRY_DATA
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "reauth_confirm"
+
+    async def test_reauth_invalid_auth(
+        self, hass, mock_sign_in_auth_error
+    ) -> None:
+        """Wrong credentials during reauth should show an error."""
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reauth"}, data=MOCK_CONFIG_ENTRY_DATA
+        )
+        assert result["type"] == "form"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONFIG_ENTRY_DATA,
+        )
+        assert result2["type"] == "form"
+        assert result2["errors"] == {"base": "invalid_auth"}

@@ -7,8 +7,9 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .api import TeslaConnectApi
+from .api import TeslaConnectApi, TeslaConnectApiError, TeslaConnectAuthError
 from .const import CONF_PASSWORD, CONF_PHONE, DOMAIN
 from .coordinator import TeslaConnectCoordinator
 
@@ -29,8 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data[CONF_PASSWORD],
     )
 
-    # Perform the initial login to obtain a token and the device list.
-    await hass.async_add_executor_job(api.sign_in)
+    try:
+        await hass.async_add_executor_job(api.sign_in)
+    except TeslaConnectAuthError as err:
+        raise ConfigEntryAuthFailed(err) from err
+    except TeslaConnectApiError as err:
+        raise ConfigEntryNotReady(err) from err
 
     coordinator = TeslaConnectCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
