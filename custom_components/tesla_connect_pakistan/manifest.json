@@ -9,6 +9,6 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/uppaljs/tesla-pakistan-hacs/issues",
   "loggers": ["tesla_connect_pakistan"],
-  "requirements": ["pyteslaconnectpk==1.0.0"],
+  "requirements": ["pyteslaconnectpk==1.1.0"],
   "version": "1.3.0"
 }
