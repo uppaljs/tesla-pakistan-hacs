@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     OptionsFlowWithReload,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import TeslaConnectApi, TeslaConnectApiError, TeslaConnectAuthError
 from .const import (
@@ -61,9 +62,10 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             phone = user_input[CONF_PHONE]
             password = user_input[CONF_PASSWORD]
 
-            api = TeslaConnectApi(phone, password)
+            websession = async_get_clientsession(self.hass)
+            api = TeslaConnectApi(phone, password, websession=websession)
             try:
-                await self.hass.async_add_executor_job(api.sign_in)
+                await api.sign_in()
             except TeslaConnectAuthError:
                 errors["base"] = "invalid_auth"
             except TeslaConnectApiError:
@@ -105,9 +107,10 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             phone = user_input[CONF_PHONE]
             password = user_input[CONF_PASSWORD]
 
-            api = TeslaConnectApi(phone, password)
+            websession = async_get_clientsession(self.hass)
+            api = TeslaConnectApi(phone, password, websession=websession)
             try:
-                await self.hass.async_add_executor_job(api.sign_in)
+                await api.sign_in()
             except TeslaConnectAuthError:
                 errors["base"] = "invalid_auth"
             except TeslaConnectApiError:
@@ -144,9 +147,10 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             phone = user_input[CONF_PHONE]
             password = user_input[CONF_PASSWORD]
 
-            api = TeslaConnectApi(phone, password)
+            websession = async_get_clientsession(self.hass)
+            api = TeslaConnectApi(phone, password, websession=websession)
             try:
-                await self.hass.async_add_executor_job(api.sign_in)
+                await api.sign_in()
             except TeslaConnectAuthError:
                 errors["base"] = "invalid_auth"
             except TeslaConnectApiError:

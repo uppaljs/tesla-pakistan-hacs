@@ -74,16 +74,12 @@ class GeyserBoostSwitch(TeslaConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable boost mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_boost, self._device_id, True
-        )
+        await self.coordinator.api.set_geyser_boost(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable boost mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_boost, self._device_id, False
-        )
+        await self.coordinator.api.set_geyser_boost(self._device_id, False)
         await self.coordinator.async_request_refresh()
 
 
@@ -105,16 +101,12 @@ class GeyserTwoHourSwitch(TeslaConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable two-hour mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_two_hour_mode, self._device_id, True
-        )
+        await self.coordinator.api.set_geyser_two_hour_mode(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable two-hour mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_two_hour_mode, self._device_id, False
-        )
+        await self.coordinator.api.set_geyser_two_hour_mode(self._device_id, False)
         await self.coordinator.async_request_refresh()
 
 
@@ -136,16 +128,12 @@ class GeyserVacationSwitch(TeslaConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable vacation mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_vacation_mode, self._device_id, True
-        )
+        await self.coordinator.api.set_geyser_vacation_mode(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable vacation mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_vacation_mode, self._device_id, False
-        )
+        await self.coordinator.api.set_geyser_vacation_mode(self._device_id, False)
         await self.coordinator.async_request_refresh()
 
 
@@ -231,15 +219,11 @@ class GeyserTimerSlotSwitch(TeslaConnectEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable this schedule slot."""
         new_times = self._build_updated_times(True)
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_timer, self._device_id, new_times
-        )
+        await self.coordinator.api.set_geyser_timer(self._device_id, new_times)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable this schedule slot."""
         new_times = self._build_updated_times(False)
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_timer, self._device_id, new_times
-        )
+        await self.coordinator.api.set_geyser_timer(self._device_id, new_times)
         await self.coordinator.async_request_refresh()

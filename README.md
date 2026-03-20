@@ -1,8 +1,15 @@
 # Tesla Connect Pakistan — Home Assistant Integration
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
-[![GitHub Release](https://img.shields.io/github/v/release/uppaljs/tesla-pakistan-hacs)](https://github.com/uppaljs/tesla-pakistan-hacs/releases)
-[![License](https://img.shields.io/github/license/uppaljs/tesla-pakistan-hacs)](LICENSE)
+<p align="center">
+  <img src="custom_components/tesla_connect_pakistan/brand/icon.png" alt="Tesla Connect Pakistan" width="128">
+</p>
+
+<p align="center">
+  <a href="https://hacs.xyz/"><img src="https://img.shields.io/badge/HACS-Custom-orange.svg" alt="HACS"></a>
+  <a href="https://github.com/uppaljs/tesla-pakistan-hacs/releases"><img src="https://img.shields.io/github/v/release/uppaljs/tesla-pakistan-hacs" alt="GitHub Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/uppaljs/tesla-pakistan-hacs" alt="License"></a>
+  <img src="https://img.shields.io/badge/Quality%20Scale-Platinum-blue" alt="Quality Scale: Platinum">
+</p>
 
 Unofficial Home Assistant custom integration for **Tesla Industries Pakistan** smart geyser and inverter controllers.
 
@@ -287,6 +294,17 @@ Schedule switches are disabled by default in Options. Go to **Configure** on the
 - **External library:** all API communication handled by [pyteslaconnectpk](https://pypi.org/project/pyteslaconnectpk/) on PyPI
 
 ## Changelog
+
+### v2.0.0
+- **BREAKING: Async library** — pyteslaconnectpk v3.0.0 uses aiohttp instead of requests; all API calls are now native async (no more `async_add_executor_job`)
+- **Injected websession** — HA's shared `aiohttp.ClientSession` is injected via `async_get_clientsession(hass)`, reducing connection overhead
+- **Strict typing** — `py.typed` marker added; full type annotations throughout
+- **Entity translations** — all entity names resolved from `strings.json` via `_attr_translation_key`
+- **Icon translations** — new `icons.json` with per-entity and per-state icon definitions
+- **Exception translations** — error messages in `strings.json` exceptions section
+- **Disabled-by-default entities** — user_mode, energy_week, energy_month disabled by default
+- **Gold documentation** — data updates, supported devices/functions, automation examples, known limitations, troubleshooting, use cases
+- **Platinum quality scale** compliance: async-dependency, inject-websession, strict-typing
 
 ### v1.3.0
 - **Diagnostics** — download redacted diagnostic data per config entry or per device (Settings → Integrations → Download diagnostics)

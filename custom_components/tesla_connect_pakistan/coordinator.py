@@ -64,8 +64,7 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             with the keys ``device``, ``details``, and ``type_id``.
 
         Raises:
-            ConfigEntryAuthFailed: When authentication fails permanently,
-                halting future updates and triggering the reauth flow.
+            ConfigEntryAuthFailed: When authentication fails permanently.
             UpdateFailed: When a temporary API error prevents fetching.
 
         """
@@ -73,34 +72,32 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Re-login when the token has expired; this also refreshes
             # self.api.devices with the current device list from the server
             if self.api.token_expired:
-                await self.hass.async_add_executor_job(self.api.sign_in)
+                await self.api.sign_in()
 
             result: dict[str, Any] = {}
 
             for device in self.api.devices:
-                did: str = device["device_id"]
-                name: str = device.get("name", "")
-                type_id: int = device.get("type_id", 0)
-                details: dict[str, Any]
+                did: str = device.raw_data["device_id"]
+                name: str = device.raw_data.get("name", "")
+                type_id: int = device.raw_data.get("type_id", 0)
+                details_raw: dict[str, Any]
 
                 try:
                     if type_id == DEVICE_TYPE_GEYSER:
-                        details = await self.hass.async_add_executor_job(
-                            self.api.get_geyser_details, did, name
-                        )
+                        geyser = await self.api.get_geyser_details(did, name)
+                        details_raw = geyser.raw_data
                     elif type_id == DEVICE_TYPE_INVERTER:
-                        details = await self.hass.async_add_executor_job(
-                            self.api.get_inverter_details, did, name
-                        )
+                        inverter = await self.api.get_inverter_details(did, name)
+                        details_raw = inverter.raw_data
                     else:
-                        details = {}
+                        details_raw = {}
                 except TeslaConnectApiError as exc:
                     _LOGGER.warning("Failed to fetch details for %s (%s): %s", name, did, exc)
-                    details = {}
+                    details_raw = {}
 
                 result[did] = {
-                    "device": device,
-                    "details": details,
+                    "device": device.raw_data,
+                    "details": details_raw,
                     "type_id": type_id,
                 }
 

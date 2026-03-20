@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import TeslaConnectApi, TeslaConnectApiError, TeslaConnectAuthError
 from .const import CONF_PASSWORD, CONF_PHONE
@@ -45,15 +46,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaConnectConfigEntry)
             causing HA to retry setup automatically.
 
     """
+    websession = async_get_clientsession(hass)
+
     api = TeslaConnectApi(
         phone=entry.data[CONF_PHONE],
         password=entry.data[CONF_PASSWORD],
+        websession=websession,
     )
 
     # Perform the initial login to obtain a token and the device list.
     # Auth failures trigger reauth; connection failures trigger retry.
     try:
-        await hass.async_add_executor_job(api.sign_in)
+        await api.sign_in()
     except TeslaConnectAuthError as err:
         raise ConfigEntryAuthFailed(err) from err
     except TeslaConnectApiError as err:

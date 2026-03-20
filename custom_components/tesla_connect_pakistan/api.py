@@ -12,3 +12,4 @@ from pyteslaconnectpk import (  # noqa: F401
     TeslaConnectAuthError,
     TOKEN_MAX_AGE,
 )
+from pyteslaconnectpk.auth import Auth  # noqa: F401

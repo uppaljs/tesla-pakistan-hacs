@@ -180,11 +180,7 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         temp = kwargs.get("temperature")
         if temp is None:
             return
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_temp_limit,
-            self._device_id,
-            int(temp),
-        )
+        await self.coordinator.api.set_geyser_temp_limit(self._device_id, int(temp))
         await self.coordinator.async_request_refresh()
 
     # ------------------------------------------------------------------
@@ -197,12 +193,7 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         if mode_int is None:
             _LOGGER.error("Unknown operation mode: %s", operation_mode)
             return
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_mode,
-            self._device_id,
-            mode_int,
-            mode_int,
-        )
+        await self.coordinator.api.set_geyser_mode(self._device_id, mode_int, mode_int)
         await self.coordinator.async_request_refresh()
 
     # ------------------------------------------------------------------
@@ -211,20 +202,12 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
 
     async def async_turn_away_mode_on(self, **kwargs: Any) -> None:
         """Activate vacation mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_vacation_mode,
-            self._device_id,
-            True,
-        )
+        await self.coordinator.api.set_geyser_vacation_mode(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_away_mode_off(self, **kwargs: Any) -> None:
         """Deactivate vacation mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_vacation_mode,
-            self._device_id,
-            False,
-        )
+        await self.coordinator.api.set_geyser_vacation_mode(self._device_id, False)
         await self.coordinator.async_request_refresh()
 
     # ------------------------------------------------------------------
@@ -233,18 +216,10 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the geyser by activating boost mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_boost,
-            self._device_id,
-            True,
-        )
+        await self.coordinator.api.set_geyser_boost(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the geyser by deactivating boost mode."""
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.set_geyser_boost,
-            self._device_id,
-            False,
-        )
+        await self.coordinator.api.set_geyser_boost(self._device_id, False)
         await self.coordinator.async_request_refresh()
