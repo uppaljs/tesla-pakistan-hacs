@@ -3,7 +3,7 @@
   "name": "Tesla Connect Pakistan",
   "codeowners": ["@uppaljs"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["system_health"],
   "documentation": "https://github.com/uppaljs/tesla-pakistan-hacs",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

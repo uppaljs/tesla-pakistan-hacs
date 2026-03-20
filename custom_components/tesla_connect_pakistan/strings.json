@@ -37,6 +37,15 @@
       "unique_id_mismatch": "The phone number does not match the existing account."
     }
   },
+  "system_health": {
+    "info": {
+      "api_endpoint": "API endpoint",
+      "authenticated_user": "Authenticated user",
+      "can_reach_server": "Can reach Tesla Connect API",
+      "devices": "Devices",
+      "token_valid": "Token valid"
+    }
+  },
   "options": {
     "step": {
       "init": {
