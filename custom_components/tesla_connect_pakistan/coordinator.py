@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for Tesla Connect Pakistan."""
+"""DataUpdateCoordinator for the Tesla Connect Pakistan integration."""
 
 from __future__ import annotations
 
@@ -22,11 +22,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Fetches data for all devices on a single account."""
+    """Coordinator that fetches data for all devices on a single account."""
 
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, api: TeslaConnectApi) -> None:
+        """Initialise the coordinator with a shared API client.
+
+        Args:
+            hass: The Home Assistant instance.
+            api: An authenticated TeslaConnectApi client.
+
+        """
         super().__init__(
             hass,
             _LOGGER,
@@ -36,19 +43,35 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Poll every device and return a dict keyed by device_id."""
+        """Poll every registered device and return a mapping keyed by device_id.
+
+        Re-authenticates transparently when the token has expired before
+        issuing per-device detail requests.  Individual device failures are
+        logged and silently replaced with an empty details dict so that a
+        single unreachable device does not abort the entire update cycle.
+
+        Returns:
+            A dict whose keys are device_id strings.  Each value is a dict
+            with the keys ``device``, ``details``, and ``type_id``.
+
+        Raises:
+            UpdateFailed: When authentication fails or an API-level error
+                prevents the device list from being fetched.
+
+        """
         try:
-            # Ensure we have a valid token (re-login if expired).
-            # This also refreshes self.api.devices.
+            # Re-login when the token has expired; this also refreshes
+            # self.api.devices with the current device list from the server
             if self.api.token_expired:
                 await self.hass.async_add_executor_job(self.api.sign_in)
 
             result: dict[str, Any] = {}
 
             for device in self.api.devices:
-                did = device["device_id"]
-                name = device.get("name", "")
-                type_id = device.get("type_id", 0)
+                did: str = device["device_id"]
+                name: str = device.get("name", "")
+                type_id: int = device.get("type_id", 0)
+                details: dict[str, Any]
 
                 try:
                     if type_id == DEVICE_TYPE_GEYSER:
@@ -62,7 +85,9 @@ class TeslaConnectCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     else:
                         details = {}
                 except TeslaConnectApiError as exc:
-                    _LOGGER.warning("Failed to fetch %s (%s): %s", name, did, exc)
+                    _LOGGER.warning(
+                        "Failed to fetch details for %s (%s): %s", name, did, exc
+                    )
                     details = {}
 
                 result[did] = {

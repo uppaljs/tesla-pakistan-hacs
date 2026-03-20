@@ -1,4 +1,4 @@
-"""Config flow for Tesla Connect Pakistan."""
+"""Config flow for the Tesla Connect Pakistan integration."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from .api import TeslaConnectApi, TeslaConnectAuthError, TeslaConnectApiError
+from .api import TeslaConnectApi, TeslaConnectApiError, TeslaConnectAuthError
 from .const import CONF_PASSWORD, CONF_PHONE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Handle the initial user configuration step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -47,7 +48,7 @@ class TeslaConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during login")
                 errors["base"] = "unknown"
             else:
-                # Prevent duplicate entries for the same phone number
+                # Prevent duplicate entries for the same phone number.
                 await self.async_set_unique_id(phone)
                 self._abort_if_unique_id_configured()
 

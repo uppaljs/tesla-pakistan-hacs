@@ -1,4 +1,4 @@
-"""Tesla Connect Pakistan — Home Assistant integration."""
+"""Support for Tesla Connect Pakistan geyser and inverter devices."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from .coordinator import TeslaConnectCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.SENSOR,
     Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         password=entry.data[CONF_PASSWORD],
     )
 
-    # Initial login
+    # Perform the initial login to obtain a token and the device list.
     await hass.async_add_executor_job(api.sign_in)
 
     coordinator = TeslaConnectCoordinator(hass, api)
@@ -42,7 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    """Unload a Tesla Connect Pakistan config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS
+    ):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

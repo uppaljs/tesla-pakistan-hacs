@@ -1,4 +1,4 @@
-"""Binary sensor platform for Tesla Connect Pakistan."""
+"""Binary sensor platform for the Tesla Connect Pakistan integration."""
 
 from __future__ import annotations
 
@@ -20,15 +20,16 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up Tesla Connect binary sensors from a config entry."""
     coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[BinarySensorEntity] = []
 
     for did, data in coordinator.data.items():
         device = data["device"]
-        name = device.get("name", did)
-        type_id = data["type_id"]
+        name: str = device.get("name", did)
+        type_id: int = data["type_id"]
 
-        # Online sensor for every device
+        # Every device gets a connectivity sensor.
         entities.append(DeviceOnlineSensor(coordinator, did, name, type_id))
 
         if type_id == DEVICE_TYPE_GEYSER:
@@ -42,72 +43,88 @@ async def async_setup_entry(
 
 
 class DeviceOnlineSensor(TeslaConnectEntity, BinarySensorEntity):
+    """Binary sensor indicating whether the device is reachable."""
+
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
         return f"{self._device_id}_online"
 
     @property
     def name(self) -> str:
+        """Return the display name."""
         return "Online"
 
     @property
     def is_on(self) -> bool | None:
-        dev = self._device_data.get("device", {})
-        return dev.get("online")
+        """Return True when the device is online."""
+        return self._device_data.get("device", {}).get("online")
 
 
 class GeyserBurnerSensor(TeslaConnectEntity, BinarySensorEntity):
+    """Binary sensor indicating whether the geyser burner is active."""
+
     _attr_device_class = BinarySensorDeviceClass.HEAT
 
     @property
     def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
         return f"{self._device_id}_burner"
 
     @property
     def name(self) -> str:
+        """Return the display name."""
         return "Burner"
 
     @property
     def is_on(self) -> bool | None:
+        """Return True when the burner is firing."""
         val = self._details.get("burner")
         return bool(val) if val is not None else None
 
 
 class InverterGridSensor(TeslaConnectEntity, BinarySensorEntity):
+    """Binary sensor indicating whether the grid supply is available."""
+
     _attr_device_class = BinarySensorDeviceClass.POWER
 
     @property
     def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
         return f"{self._device_id}_grid_status"
 
     @property
     def name(self) -> str:
+        """Return the display name."""
         return "Grid"
 
     @property
     def is_on(self) -> bool | None:
+        """Return True when grid power is present."""
         val = self._details.get("grid_status")
         return bool(val) if val is not None else None
 
 
 class InverterSolarSensor(TeslaConnectEntity, BinarySensorEntity):
+    """Binary sensor indicating whether the solar input is active."""
+
     _attr_device_class = BinarySensorDeviceClass.POWER
+    _attr_icon = "mdi:solar-power"
 
     @property
     def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
         return f"{self._device_id}_solar_status"
 
     @property
     def name(self) -> str:
+        """Return the display name."""
         return "Solar"
 
     @property
     def is_on(self) -> bool | None:
+        """Return True when solar power is being generated."""
         val = self._details.get("solar_status")
         return bool(val) if val is not None else None
-
-    @property
-    def icon(self) -> str:
-        return "mdi:solar-power"

@@ -1,4 +1,4 @@
-"""Water heater platform for Tesla Connect Pakistan."""
+"""Water heater platform for the Tesla Connect Pakistan integration."""
 
 from __future__ import annotations
 
@@ -27,24 +27,23 @@ from .const import (
     GEYSER_MODE_SOLAR_DISABLED,
     GEYSER_MODE_SOLAR_ENABLED,
     GEYSER_MODES,
-    HA_MODE_MAP,
+    GEYSER_MODES_REVERSE,
 )
 from .coordinator import TeslaConnectCoordinator
 from .entity import TeslaConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Operation modes exposed in HA UI
-OPERATION_LIST = list(HA_MODE_MAP.keys())
+# Operation modes exposed in the HA UI.
+OPERATION_LIST = sorted(GEYSER_MODES_REVERSE.keys())
 
-# Map the Tesla geyser's curr_mode int → HA state constant for the
-# entity's main state.  HA water_heater uses these as the entity state.
+# Map the Tesla geyser curr_mode integer to an HA state constant.
 _MODE_TO_HA_STATE: dict[int, str] = {
-    GEYSER_MODE_GAS: STATE_GAS,
+    GEYSER_MODE_AUTOMATIC: STATE_ECO,
     GEYSER_MODE_ELECTRICITY: STATE_ELECTRIC,
-    GEYSER_MODE_AUTOMATIC: STATE_ECO,        # auto ≈ eco
-    GEYSER_MODE_SOLAR_ENABLED: STATE_ECO,     # solar ≈ eco
+    GEYSER_MODE_GAS: STATE_GAS,
     GEYSER_MODE_SOLAR_DISABLED: STATE_ELECTRIC,
+    GEYSER_MODE_SOLAR_ENABLED: STATE_ECO,
 }
 
 
@@ -53,16 +52,19 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up Tesla Connect water heater entities from a config entry."""
     coordinator: TeslaConnectCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[WaterHeaterEntity] = []
 
     for did, data in coordinator.data.items():
         device = data["device"]
-        name = device.get("name", did)
-        type_id = data["type_id"]
+        name: str = device.get("name", did)
+        type_id: int = data["type_id"]
 
         if type_id == DEVICE_TYPE_GEYSER:
-            entities.append(TeslaGeyserWaterHeater(coordinator, did, name, type_id))
+            entities.append(
+                TeslaGeyserWaterHeater(coordinator, did, name, type_id)
+            )
 
     async_add_entities(entities)
 
@@ -71,45 +73,49 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
     """Water heater entity representing a Tesla Connect geyser.
 
     Supported HA features:
-    - TARGET_TEMPERATURE  → set_temperature (30–75 °C)
-    - OPERATION_MODE      → set_operation_mode (gas/electric/auto/solar_on/solar_off)
-    - AWAY_MODE           → vacation mode
-    - ON_OFF              → boost on = turn_on, boost off = turn_off
+
+    * **TARGET_TEMPERATURE** — set temperature (30–75 °C).
+    * **OPERATION_MODE** — gas / electric / auto / solar_on / solar_off.
+    * **AWAY_MODE** — maps to vacation mode.
+    * **ON_OFF** — turn_on activates boost; turn_off deactivates it.
     """
 
-    _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        | WaterHeaterEntityFeature.OPERATION_MODE
-        | WaterHeaterEntityFeature.AWAY_MODE
-        | WaterHeaterEntityFeature.ON_OFF
-    )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = 30
-    _attr_max_temp = 75
-    _attr_target_temperature_step = 1.0
-    _attr_operation_list = OPERATION_LIST
     _attr_icon = "mdi:water-boiler"
+    _attr_max_temp = 75
+    _attr_min_temp = 30
+    _attr_operation_list = OPERATION_LIST
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.AWAY_MODE
+        | WaterHeaterEntityFeature.ON_OFF
+        | WaterHeaterEntityFeature.OPERATION_MODE
+        | WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    )
+    _attr_target_temperature_step = 1.0
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def unique_id(self) -> str:
+        """Return a unique identifier for this entity."""
         return f"{self._device_id}_water_heater"
 
     @property
     def name(self) -> str:
+        """Return the display name."""
         return "Water heater"
 
-    # ── state ────────────────────────────────────────────────────────
+    # ------------------------------------------------------------------
+    # State
+    # ------------------------------------------------------------------
 
     @property
     def state(self) -> str | None:
-        """Return the HA state constant based on the geyser's *current* mode.
+        """Return the HA state constant based on the current operating mode.
 
-        curr_mode = what the device is actually running on right now.
-        user_mode = what the user selected (e.g. automatic).
-
-        In automatic mode, the device picks gas or electric based on
-        availability, so curr_mode can be GAS even when user_mode is
-        AUTOMATIC.  We report what the geyser is actually doing.
+        ``curr_mode`` reflects what the geyser is *actually* running on
+        (e.g. gas), while ``user_mode`` is the preference the user set
+        (e.g. automatic).  In automatic mode the device picks gas or
+        electric based on availability, so the two may differ.  We
+        report what the geyser is actually doing.
         """
         if self._details.get("vacation"):
             return STATE_OFF
@@ -118,49 +124,65 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
             return None
         return _MODE_TO_HA_STATE.get(mode_val, STATE_GAS)
 
-    # ── temperatures ─────────────────────────────────────────────────
+    # ------------------------------------------------------------------
+    # Temperatures
+    # ------------------------------------------------------------------
 
     @property
     def current_temperature(self) -> float | None:
+        """Return the current water temperature."""
         return self._details.get("curr_temp")
 
     @property
     def target_temperature(self) -> float | None:
+        """Return the target temperature limit."""
         return self._details.get("temp_limit")
 
-    # ── operation mode ───────────────────────────────────────────────
+    # ------------------------------------------------------------------
+    # Operation mode
+    # ------------------------------------------------------------------
 
     @property
     def current_operation(self) -> str | None:
+        """Return the user-selected operation mode as a string."""
         mode_val = self._details.get("user_mode")
         return GEYSER_MODES.get(mode_val)
 
-    # ── away mode (= vacation) ───────────────────────────────────────
+    # ------------------------------------------------------------------
+    # Away mode (vacation)
+    # ------------------------------------------------------------------
 
     @property
     def is_away_mode_on(self) -> bool | None:
+        """Return True when vacation mode is active."""
         val = self._details.get("vacation")
         return bool(val) if val is not None else None
 
-    # ── extra attributes ─────────────────────────────────────────────
+    # ------------------------------------------------------------------
+    # Extra attributes
+    # ------------------------------------------------------------------
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
+        """Return supplementary attributes not covered by standard properties."""
         return {
+            "boost": bool(self._details.get("boost")),
+            "burner": bool(self._details.get("burner")),
+            "electric_units": self._details.get("electric_units"),
+            "gas_units": self._details.get("gas_units"),
+            "solar": bool(self._details.get("solar")),
             "status_label": self._details.get("status_label"),
             "temp_label": self._details.get("temp_label"),
-            "burner": bool(self._details.get("burner")),
-            "boost": bool(self._details.get("boost")),
             "two_hour_mode": bool(self._details.get("two_hour_mode")),
             "vacation": bool(self._details.get("vacation")),
-            "solar": bool(self._details.get("solar")),
-            "gas_units": self._details.get("gas_units"),
-            "electric_units": self._details.get("electric_units"),
         }
 
-    # ── actions: temperature ─────────────────────────────────────────
+    # ------------------------------------------------------------------
+    # Actions: temperature
+    # ------------------------------------------------------------------
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set the target temperature."""
         temp = kwargs.get("temperature")
         if temp is None:
             return
@@ -171,10 +193,13 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    # ── actions: operation mode ──────────────────────────────────────
+    # ------------------------------------------------------------------
+    # Actions: operation mode
+    # ------------------------------------------------------------------
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
-        mode_int = HA_MODE_MAP.get(operation_mode)
+        """Set the geyser operating mode."""
+        mode_int = GEYSER_MODES_REVERSE.get(operation_mode)
         if mode_int is None:
             _LOGGER.error("Unknown operation mode: %s", operation_mode)
             return
@@ -186,9 +211,12 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    # ── actions: away mode (vacation) ────────────────────────────────
+    # ------------------------------------------------------------------
+    # Actions: away mode (vacation)
+    # ------------------------------------------------------------------
 
     async def async_turn_away_mode_on(self, **kwargs: Any) -> None:
+        """Activate vacation mode."""
         await self.hass.async_add_executor_job(
             self.coordinator.api.set_geyser_vacation_mode,
             self._device_id,
@@ -197,6 +225,7 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_turn_away_mode_off(self, **kwargs: Any) -> None:
+        """Deactivate vacation mode."""
         await self.hass.async_add_executor_job(
             self.coordinator.api.set_geyser_vacation_mode,
             self._device_id,
@@ -204,10 +233,12 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    # ── actions: on / off (boost) ────────────────────────────────────
+    # ------------------------------------------------------------------
+    # Actions: on / off (boost)
+    # ------------------------------------------------------------------
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on = activate boost mode for immediate heating."""
+        """Turn on the geyser by activating boost mode."""
         await self.hass.async_add_executor_job(
             self.coordinator.api.set_geyser_boost,
             self._device_id,
@@ -216,7 +247,7 @@ class TeslaGeyserWaterHeater(TeslaConnectEntity, WaterHeaterEntity):
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off = deactivate boost mode."""
+        """Turn off the geyser by deactivating boost mode."""
         await self.hass.async_add_executor_job(
             self.coordinator.api.set_geyser_boost,
             self._device_id,
